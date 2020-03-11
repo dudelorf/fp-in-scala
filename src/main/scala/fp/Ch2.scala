@@ -1,6 +1,6 @@
-package example
+package fp
 
-object Ch1 {
+object Ch2 {
     
     def fib(n: Int): Int = {
     
