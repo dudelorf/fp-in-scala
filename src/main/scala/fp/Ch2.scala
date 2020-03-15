@@ -22,7 +22,7 @@ object Ch2 {
                 true
             case Array(a, b) =>
                 p(a, b)
-            case _ if p(arr.head, arr.tail.head) =>
+            case Array(a, b, _*) if p(a, b) =>
                 loop(arr.tail)
             case _ =>
                 false
