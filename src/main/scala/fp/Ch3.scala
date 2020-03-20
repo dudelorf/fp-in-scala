@@ -27,6 +27,10 @@ object List {
     }
 }
 
+sealed trait Tree[+A]
+case class Leaf[A](value: A) extends Tree[A]
+case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+
 object Ch3 {
 
   def tail[A](l: List[A]): List[A] = l match {
@@ -83,9 +87,58 @@ object Ch3 {
   def foldRight2[A, B](as: List[A], z: B)(f: (B, A) => B): B =
     foldLeft(reverse(as), z)(f)
     
-  def append[A](as: List[A], a: A): List[A] =
-    foldLeft(List(a), as)((acc, h) => Cons(h, acc))
+  def append[A](as1: List[A], as2: List[A]): List[A] =
+    List.foldRight(as1, Nil:List[A])(Cons(_,_))
     
-  def concatenate[A](as1: List[A], as2: List[A]): List[A] =
-    foldLeft(as1, as2)(append)
+  def concatenate[A](as: List[List[A]]): List[A] =
+    List.foldRight(as, Nil:List[A])(append)
+    
+  def addOne(as: List[Int]): List[Int] =
+    List.foldRight(as, Nil:List[Int])((a, acc) => Cons(a + 1, acc))
+  
+  def toStrings(as: List[Double]): List[String] = 
+    List.foldRight(as, Nil:List[String])((a, acc) => Cons(a.toString, acc))
+    
+  def map[A,B](as: List[A])(f: A => B): List[B] =
+    List.foldRight(as, Nil:List[B])((a, acc) => Cons(f(a), acc))
+    
+  def filter[A](as: List[A])(f: A => Boolean): List[A] =
+    List.foldRight(as, Nil:List[A])((a, acc) => if(f(a)) Cons(a, acc) else acc)
+    
+  def flatMap[A,B](as: List[A])(f: A => List[B]): List[B] =
+    concatenate(map(as)(f))
+    
+  def filterVflatMap[A](as: List[A])(p: A => Boolean): List[A] =
+    flatMap(as)(a => if(p(a)) List(a) else Nil)
+    
+  def zip(as1: List[Int], as2: List[Int]): List[Int] = ???
+  
+  def zipWith[A](as1: List[A], as2: List[A])(f: (A, A) => A): List[A] = ???
+  
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
+
+
+  def size[A](t: Tree[A]): Int = t match {
+    case Branch(l, r) => size(l) + size(r)
+    case Leaf(_) => 1
+  }
+  
+  def maximum(t: Tree[Int]): Int = t match {
+    case Branch(l, r) => maximum(l) max maximum(r)
+    case Leaf(v) => v
+  }
+  
+  def depth(t: Tree[Int]): Int = t match {
+    case Branch(l, r) => (depth(l) max depth(r)) + 1
+    case Leaf(v) => 0
+  }
+  
+  def map[A,B](t: Tree[A])(f: A => B): Tree[B] = t match {
+    case Branch(l, r) => Branch(map(l)(f), map(r)(f))
+    case Leaf(v) => Leaf(f(v))
+  }
+  
+  def fold = ???
+  
 }
+
