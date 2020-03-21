@@ -81,64 +81,98 @@ object Ch3 {
   def reverse[A](l: List[A]) =
     foldLeft(l, Nil: List[A])((acc, h) => Cons(h, acc))
 
-  def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = 
+  def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B =
     List.foldRight(reverse(as), z)((a, b) => f(b, a))
-    
+
   def foldRight2[A, B](as: List[A], z: B)(f: (B, A) => B): B =
     foldLeft(reverse(as), z)(f)
-    
-  def append[A](as1: List[A], as2: List[A]): List[A] =
-    List.foldRight(as1, Nil:List[A])(Cons(_,_))
-    
-  def concatenate[A](as: List[List[A]]): List[A] =
-    List.foldRight(as, Nil:List[A])(append)
-    
-  def addOne(as: List[Int]): List[Int] =
-    List.foldRight(as, Nil:List[Int])((a, acc) => Cons(a + 1, acc))
-  
-  def toStrings(as: List[Double]): List[String] = 
-    List.foldRight(as, Nil:List[String])((a, acc) => Cons(a.toString, acc))
-    
-  def map[A,B](as: List[A])(f: A => B): List[B] =
-    List.foldRight(as, Nil:List[B])((a, acc) => Cons(f(a), acc))
-    
-  def filter[A](as: List[A])(f: A => Boolean): List[A] =
-    List.foldRight(as, Nil:List[A])((a, acc) => if(f(a)) Cons(a, acc) else acc)
-    
-  def flatMap[A,B](as: List[A])(f: A => List[B]): List[B] =
-    concatenate(map(as)(f))
-    
-  def filterVflatMap[A](as: List[A])(p: A => Boolean): List[A] =
-    flatMap(as)(a => if(p(a)) List(a) else Nil)
-    
-  def zip(as1: List[Int], as2: List[Int]): List[Int] = ???
-  
-  def zipWith[A](as1: List[A], as2: List[A])(f: (A, A) => A): List[A] = ???
-  
-  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
 
+  def append[A](as1: List[A], as2: List[A]): List[A] =
+    List.foldRight(as1, Nil: List[A])(Cons(_, _))
+
+  def concatenate[A](as: List[List[A]]): List[A] =
+    List.foldRight(as, Nil: List[A])(append)
+
+  def addOne(as: List[Int]): List[Int] =
+    List.foldRight(as, Nil: List[Int])((a, acc) => Cons(a + 1, acc))
+
+  def toStrings(as: List[Double]): List[String] =
+    List.foldRight(as, Nil: List[String])((a, acc) => Cons(a.toString, acc))
+
+  def map[A, B](as: List[A])(f: A => B): List[B] =
+    List.foldRight(as, Nil: List[B])((a, acc) => Cons(f(a), acc))
+
+  def filter[A](as: List[A])(f: A => Boolean): List[A] =
+    List.foldRight(as, Nil: List[A])((a, acc) =>
+      if (f(a)) Cons(a, acc) else acc
+    )
+
+  def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] =
+    concatenate(map(as)(f))
+
+  def filterVflatMap[A](as: List[A])(p: A => Boolean): List[A] =
+    flatMap(as)(a => if (p(a)) List(a) else Nil)
+
+  def zip(as1: List[Int], as2: List[Int]): List[Int] = {
+    @annotation.tailrec
+    def loop(acc: List[Int], a: List[Int], b: List[Int]): List[Int] =
+      (a, b) match {
+        case (Cons(ha, ta), Cons(hb, tb)) => loop(Cons(ha + hb, acc), ta, tb)
+        case _                            => acc
+      }
+
+    loop(Nil, as1, as2)
+  }
+
+  def zipWith[A,B](as1: List[A], as2: List[A])(f: (A, A) => B): List[B] = {
+   @annotation.tailrec
+    def loop(acc: List[B], a: List[A], b: List[A]): List[B] = (a, b) match {
+      case(Cons(ha, ta), Cons(hb, tb)) => loop(Cons(f(ha, hb), acc), ta, tb)
+      case _ => acc
+    }
+    
+    loop(Nil: List[B], as1, as2)
+  }
+
+  @annotation.tailrec
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = {
+    @annotation.tailrec
+    def startsWithSequence(l: List[A], s: List[A]): Boolean = (l, s) match {
+      case (_, Nil) => true
+      case (Cons(lh, lt), Cons(sh, st)) if lh == sh => startsWithSequence(lt, st)
+      case _ => false
+    }
+    
+    sup match {
+      case Nil => false
+      case _ if startsWithSequence(sup, sub) => true
+      case Cons(_, t) => hasSubsequence(t, sub)
+    }
+  }
 
   def size[A](t: Tree[A]): Int = t match {
     case Branch(l, r) => size(l) + size(r)
-    case Leaf(_) => 1
+    case Leaf(_)      => 1
   }
-  
+
   def maximum(t: Tree[Int]): Int = t match {
     case Branch(l, r) => maximum(l) max maximum(r)
-    case Leaf(v) => v
+    case Leaf(v)      => v
   }
-  
+
   def depth(t: Tree[Int]): Int = t match {
     case Branch(l, r) => (depth(l) max depth(r)) + 1
-    case Leaf(v) => 0
+    case Leaf(v)      => 0
   }
-  
-  def map[A,B](t: Tree[A])(f: A => B): Tree[B] = t match {
-    case Branch(l, r) => Branch(map(l)(f), map(r)(f))
-    case Leaf(v) => Leaf(f(v))
-  }
-  
-  def fold = ???
-  
-}
 
+  def map[A, B](t: Tree[A])(f: A => B): Tree[B] = t match {
+    case Branch(l, r) => Branch(map(l)(f), map(r)(f))
+    case Leaf(v)      => Leaf(f(v))
+  }
+
+  def fold[A,B](t: Tree[A])(f: A => B)(g: (B,B) => B): B = t match {
+    case Branch(l, r) => g(fold(l)(f)(g), fold(r)(f)(g))
+    case Leaf(v) => f(v)
+  }
+
+}
