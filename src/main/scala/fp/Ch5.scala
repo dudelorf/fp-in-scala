@@ -44,19 +44,22 @@ object Ch5 {
       )
       
     def headOption: Option[A] =
-      this.foldRight(Nobne)((a, _) => Some(a))
+      foldRight(Nobne)((a, _) => Some(a))
       
     def map(f: A => B): Stream[B] =
-      this.flatMap(empty)((a, b) => cons(f(a), b))
+      foldRight(empty)((h, t) => cons(f(h), t))
 
     def filter(p: A => Boolean): Stream[A] =
-      this.flatMap(empty)((a, b) => 
-      if(p(a)) cons(a, b)
-      else b
+      flatMap(empty)((h, t) => 
+        if(p(h)) cons(h, t)
+        else t
     )
 
-    def flatMap(f: A => Stream[B]): Stream[B] = ???
+    def append[B >: A](s: => Stream[B]): Stream[A]
 
+    def flatMap[B](f: A => Stream[B]): Stream[B] = ???
+
+    def s: String = 12
   }
   
   case object Empty extends Stream[Nothing]
