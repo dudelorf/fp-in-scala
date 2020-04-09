@@ -1,5 +1,9 @@
 package fp
 
+import scala.collection.immutable.List
+import scala.collection.immutable.Nil
+import fp.Ch5.Stream._
+
 object Ch5 {
   sealed trait Stream[+A] {
   
@@ -37,29 +41,28 @@ object Ch5 {
     def forAll(p: A => Boolean): Boolean =
       this.foldRight(true)((a, b) => p(a) && b)
       
-    def takeWhile(p: A => Boolean): Stream[A] =
-      this.foldRight(Empty)((h, t) =>
+    def takeWhile2(p: A => Boolean): Stream[A] =
+      this.foldRight(empty[A])((h, t) =>
         if(p(h)) cons(h, t)
         else empty
       )
       
-    def headOption: Option[A] =
-      foldRight(Nobne)((a, _) => Some(a))
+    def headOptionFr: Option[A] =
+      foldRight(None: Option[A])((a, _) => Some(a))
       
-    def map(f: A => B): Stream[B] =
-      foldRight(empty)((h, t) => cons(f(h), t))
+    def map[B](f: A => B): Stream[B] =
+      foldRight(empty[B])((h, t) => cons(f(h), t))
 
     def filter(p: A => Boolean): Stream[A] =
-      flatMap(empty)((h, t) => 
+      foldRight(empty[A])((h, t) => 
         if(p(h)) cons(h, t)
         else t
     )
 
-    def append[B >: A](s: => Stream[B]): Stream[A]
+    def append[B >: A](s: => Stream[B]): Stream[A] = ???
 
     def flatMap[B](f: A => Stream[B]): Stream[B] = ???
 
-    def s: String = 12
   }
   
   case object Empty extends Stream[Nothing]
@@ -69,7 +72,7 @@ object Ch5 {
     def cons[A](hd: => A, tl: => Stream[A]): Stream[A] = {
       lazy val head = hd
       lazy val tail = tl
-      cons(() => head, () => tail)
+      Cons(() => head, () => tail)
     }
 
     def empty[A]: Stream[A] = Empty
