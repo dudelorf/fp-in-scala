@@ -65,6 +65,24 @@ object Ch5 {
     def flatMap[B](f: A => Stream[B]): Stream[B] =
       foldRight(empty[B])((h, t) => f(h) append t)
 
+    def constant[A](a: A): Stream[A] = {
+      lazy val s: Stream[A] = Cons(() => a, () => s)
+      s
+    }
+    
+    def from(n: Int): Stream[Int] =
+      cons(n, from(n + 1))
+      
+    def fibs: Stream[Int] = {
+      def go(p0: Int, p1: Int): Stream[Int] = cons(p1, go(p1, p0 + p1))
+      go(0, 1)
+    }
+      
+    def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] =
+      f(z) match {
+        case Some((a, s)) => cons(a, unfold(s)(f))
+        case None => empty
+      }
   }
   
   case object Empty extends Stream[Nothing]
