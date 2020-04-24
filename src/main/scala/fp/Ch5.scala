@@ -83,6 +83,51 @@ object Ch5 {
         case Some((a, s)) => cons(a, unfold(s)(f))
         case None => empty
       }
+      
+    def fibsUnfold: Stream[Int] =
+      unfold((0, 1))((s: (Int, Int)) => Some(s._2, (s._2, s._1 + s._2)))
+
+    def fromUnfold(n: Int): Stream[Int] =
+      unfold(n)((s: Int) => Some(s, s + 1))
+    
+    def constantUnfold[A](a: A): Stream[A] =
+      unfold(a)(_ => Some(a, a))
+
+    def onesUnfold: Stream[Int] =
+      unfold(1)(_ => Some(1, 1))
+      
+    def mapUnfold[B](f: A => B): Stream[B] =
+      unfold(this) {
+        case Cons(head, tail) => Some((f(head()), tail()))
+        case _ => None
+      }
+    
+    def takeUnfold(n: Int): Stream[A] =
+      unfold((this, n)) {
+        case (Cons(h, t), 1) => Some(h(), (empty, 0))
+        case (Cons(h, t), n) if n > 0 => Some((h(), (t(), n - 1)))
+        case _ => None
+      }
+
+    def takeWhileUnfold(p: A => Boolean): Stream[A] =
+      unfold(this) {
+        case Cons(h, t) if p(h()) => Some(h(), t())
+        case _ => None
+      }
+    
+    def zipWithUnfold[B, C](s2: Stream[B])(f: (A, B) => C): Stream[C] =
+      unfold((this, s2)) {
+        case (Cons(ha, ta), Cons(hb, tb)) => Some((f(ha(), hb()), (ta(), tb())))
+        case _ => None
+      }
+
+    def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] =
+      unfold((this, s2)) {
+        case (Cons(ha, ta), Cons(hb, tb)) => Some((Some(ha()), Some(hb())), (ta(), tb()))
+        case (Empty, Cons(hb, tb)) => Some(( (None, Some(hb())), (Empty, Empty) ))
+        case (Cons(ha, ta), Empty) => Some(( (Some(ha()), None), (Empty, Empty) ))
+        case (Empty, Empty) => None
+      }
   }
   
   case object Empty extends Stream[Nothing]
