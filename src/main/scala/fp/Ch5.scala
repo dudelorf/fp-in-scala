@@ -128,6 +128,19 @@ object Ch5 {
         case (Cons(ha, ta), Empty) => Some(( (Some(ha()), None), (Empty, Empty) ))
         case (Empty, Empty) => None
       }
+      
+    def startsWith[A](s2: Stream[A]): Boolean =
+      zipAll(s2).takeWhile(_._2.isDefined).forAll {
+        case (Some(h1), Some(h2)) => h1 == h2
+      }
+
+    def tails: Stream[Stream[A]] =
+      unfold(this) {
+        case Empty => None
+        case s => Some((s, s drop 1))
+      } append Stream(empty)
+    
+    def scanRight[B](z: B)(f: (A, => B) => B): Stream[B] = ???
   }
   
   case object Empty extends Stream[Nothing]
