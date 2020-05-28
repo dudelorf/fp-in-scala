@@ -45,23 +45,23 @@ object Ch4 {
       } yield f(aa, bb)
     // a flatMap (aa => b map (bb => f(aa, bb)))
 
-    def sequence[A](a: List[Option[A]]): Option[List[A]] = a match {
-      case Nil => Some(Nil)
-      case Cons(h, t) =>
+    def sequence[A](a: FPList[Option[A]]): Option[FPList[A]] = a match {
+      case FPNil => Some(FPNil)
+      case FPCons(h, t) =>
         for {
           hh <- h
           tt <- sequence(t)
-        } yield Cons(hh, tt)
+        } yield FPCons(hh, tt)
       // case Cons(h, t) => h flatMap (hh => sequence(t) map (tt => Cons(hh, tt)))
     }
 
-    def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] =
+    def traverse[A, B](a: FPList[A])(f: A => Option[B]): Option[FPList[B]] =
       a match {
-        case Nil              => Some(Nil)
-        case Cons(head, tail) => map2(f(head), traverse(tail)(f))(Cons(_, _))
+        case FPNil              => Some(FPNil)
+        case FPCons(head, tail) => map2(f(head), traverse(tail)(f))(FPCons(_, _))
       }
 
-    def sequenceViaTraverse[A](a: List[Option[A]]): Option[List[A]] =
+    def sequenceViaTraverse[A](a: FPList[Option[A]]): Option[FPList[A]] =
       traverse(a)(identity)
   }
 
@@ -87,12 +87,12 @@ object Ch4 {
         bb <- b
       } yield f(a, bb)
       
-    def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] =
+    def sequence[E, A](es: FPList[Either[E, A]]): Either[E, FPList[A]] =
       traverse(es)(identity)
     
-    def traverse[E, A, B](as: List[A])(f: A => Either[E, B]): Either[E, List[B]] = as match {
-      case Nil => Right(Nil)
-      case Cons(head, tail) => f(head).map2(traverse(tail)(f))(Cons(_, _))
+    def traverse[E, A, B](as: FPList[A])(f: A => Either[E, B]): Either[E, FPList[B]] = as match {
+      case FPNil => Right(FPNil)
+      case FPCons(head, tail) => f(head).map2(traverse(tail)(f))(FPCons(_, _))
     }
   }
   case class Left[+E](value: E) extends Either[E, Nothing]
