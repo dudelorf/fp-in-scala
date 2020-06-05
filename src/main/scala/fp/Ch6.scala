@@ -1,6 +1,9 @@
 package fp
 
 import fp.Ch6.Rand
+import fp.State.set
+
+import scala.util.Random
 
 trait RNG {
   def nextInt: (Int, RNG)
@@ -109,5 +112,45 @@ object State {
 
   def sequence[S, A](fs: List[State[S, A]]): State[S, List[A]] =
     fs.foldRight(unit[S,List[A]](List()))((f, acc) => f.map2(acc)(_ :: _))
+
+  def modify[S](f: S => S): State[S, Unit] = for {
+    s <- get
+    _ <- set(f(s))
+  } yield ()
+
+  def get[S]: State[S, S] = State(s => (s, s))
+
+  def set[S](s: S): State[S, Unit] = State(_ => ((), s))
+}
+
+sealed trait Input
+case object Coin extends Input
+case object Turn extends Input
+
+case class Machine(locked: Boolean, candies: Int, coins: Int)
+
+object Candy {
+  import State._
+
+  def update = (i: Input) => (s: Machine) =>
+    (i, s) match {
+      case (_, Machine(_, 0, _)) => s
+      case (Coin, Machine(false, _, _)) => s
+      case (Turn, Machine(true, _, _)) => s
+      case (Coin, Machine(true, candy, coin)) =>
+        Machine(false, candy, coin + 1)
+      case (Turn, Machine(false, candy, coin)) =>
+        Machine(true, candy - 1, coin)
+    }
+
+  val p: Input => State[Machine, Unit] = (i: Input) => {
+    modify[Machine](update(i))
+  }
+
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] =
+    sequence(inputs.map(i => modify[Machine](update(i))))
+    .flatMap(_ => get[Machine].map(s => (s.coins, s.candies)))
+
+  simulateMachine(List[Input]()).run(Machine(true, 1, 1))
 }
 
